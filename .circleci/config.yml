@@ -1,26 +1,29 @@
-
-workflows:
-  version: 2
-  build_and_test:
-    jobs: 
-      build:
-        docker: 
-          - image: circleci/python:3.8
-        steps: 
-          - checkout 
-          - run: | 
+jobs: 
+  build:
+    docker: 
+      - image: circleci/python:3.8
+    steps: 
+      - checkout 
+      - run: 
+          name: download dependencies
+          command: |
               python3 -m venv venv
               . venv/bin/activate
               pip install -r requirements_dev.txt
-              python setup.py verify
-          - run: 
-              name: init .pypirc
-              command: |
-                echo -e "[pypi]" >> ~/.pypirc
-                echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-                echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
-          - run: |
+      - run: 
+          name: init .pypirc
+          command: |
+              echo -e "[pypi]" >> ~/.pypirc
+              echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+              echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      - run: 
+          name: upload to test pypi repository
+          command: |
               . venv/bin/activate
-              cd django-ingredient-field
-              python3 setup.py sdist
+              python3 django-ingredient-field/setup.py sdist
               twine upload --repository testpypi dist/*
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+     - build
