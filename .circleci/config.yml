@@ -54,7 +54,37 @@ jobs:
           command: |
               python3 setup.py sdist
               twine upload dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive
+  pre-minor-release:
+    docker: 
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run: 
+          name: download dependencies
+          command: |
+              python3 -m venv ./venv
+              . ./venv/bin/activate
+              pip install -r requirements_dev.txt
+      - run:
+          name: bump version
+          command: |
+            . ./venv/bin/activate
+            bumpversion minor --no-commit
+            cat .bumpversion.cfg
+            git config user.email "som@bot.com"
+            git config user.name "Deployment Bot"
+            # git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git main
 
+  pre-major-release:
+    docker: 
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run:
+          name: bump version
+          command: |
+            bumpversion major --dry-run
+            git push
 workflows:
   version: 2
   build_test_publish:
@@ -67,9 +97,16 @@ workflows:
             branches:
               only:
                 - develop
+      - pre-minor-release:
+          requires:
+            - build
+          filters:
+            branches:
+              only: 
+                - main
       - publish-prod:
           requires:
-            - publish-test
+            - pre-minor-release
           filters:
             branches:
               only: 
