@@ -19,7 +19,7 @@ jobs:
           name: run tests
           command: |
               . venv/bin/activate
-              coverage run python3 manage.py test dj_ingredient_field sample_app
+              coverage run manage.py test dj_ingredient_field sample_app
               coverage report 
               coverage html
       - store_artifacts:
