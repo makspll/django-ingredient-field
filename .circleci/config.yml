@@ -38,7 +38,7 @@ jobs:
               bumpversion minor --message='{current_version} → {new_version} [skip ci]' --dry-run
               git config user.email "bumpversionbot@gmail.com"
               git config user.name "bumpversionbot"
-              git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git develop
+              git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:develop
       - run: 
           name: upload to test pypi repository
           working_directory: django-ingredient-field
