@@ -35,7 +35,7 @@ jobs:
           command: |
               . ./venv/bin/activate
 
-              bumpversion minor --message='{current_version} → {new_version} [skip ci]' --dry-run
+              bumpversion minor --message='{current_version} → {new_version} [skip ci]' --dry-run --allow-dirty
               git config user.email "bumpversionbot@gmail.com"
               git config user.name "bumpversionbot"
               git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:develop
@@ -46,7 +46,7 @@ jobs:
               . ../venv/bin/activate
               python3 setup.py sdist
               twine check dist/*
-              twine upload --repository testpypi dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive
+              twine upload --repository testpypi dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive --skip-existing 
   publish-prod:
     docker:
       - image: circleci/python:3.8
