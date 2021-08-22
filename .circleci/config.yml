@@ -27,6 +27,9 @@ jobs:
       production: 
         type: boolean
         default: false
+      bump-version-part:
+        type: string
+        default: patch
     steps:
       - checkout 
       - run: 
@@ -38,19 +41,28 @@ jobs:
       - unless:
           condition: << parameters.production >>
           steps:
-            - run: 
-                name: bump version
-                command: |
-                  . ./venv/bin/activate
-
-                  # set arguments for test repository for next step
-                  echo "export REPO_ARGS='--repository testpypi'" >> $BASH_ENV
-                  
-                  # bump version
-                  bumpversion minor --message='{current_version} → {new_version} [skip ci]' --allow-dirty
-                  git config --global user.email "bumpversionbot@gmail.com"
-                  git config --global user.name "bumpversionbot"
-                  git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:<< pipeline.git.branch >>
+            run: 
+              name: set TWINE_ARGS
+              command: |
+                # set arguments for test repository for next step
+                echo "export TWINE_ARGS='--repository testpypi'" >> $BASH_ENV
+      - when:
+          condition:
+            equal: ["major", << parameters.bump-version-part >>]
+          steps:
+            run:
+              name: set BUMP2VERSION_ARGS
+              command: |
+                echo "export BUMP2VERSION_ARGS='--tag'" >> $BASH_ENV
+      - run: 
+          name: bump version
+          command: |
+            . ./venv/bin/activate
+            bumpversion << parameters.bump-version-part >> --message='{current_version} → {new_version} [skip ci]' --allow-dirty ${BUMP2VERSION_ARGS}
+            git config --global user.email "bumpversionbot@gmail.com"
+            git config --global user.name "bumpversionbot"
+            git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:<< pipeline.git.branch >>
+            git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:<< pipeline.git.branch >> --tags
       - run: 
           name: upload to pypi repository
           working_directory: django-ingredient-field
@@ -58,7 +70,7 @@ jobs:
             . ../venv/bin/activate
             python3 setup.py sdist
             twine check dist/*
-            twine upload ${REPO_ARGS} dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive --skip-existing 
+            twine upload ${TWINE_ARGS} dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive --skip-existing 
 workflows:
   build_test_publish:
     jobs:
@@ -72,12 +84,23 @@ workflows:
               only:
                 - develop
           production: false
-      # - publish:
-      #     name: publish-prod
-      #     requires:
-      #       - build
-      #     filters:
-      #       branches:
-      #         only: 
-      #           - main
-      #     production: true
+          bump-version-part: patch
+      - publish:
+          name: publish-minor
+          requires:
+            - build
+          filters:
+            branches:
+              only: 
+                - main
+          production: true
+          bump-version-part: minor
+      - publish:
+          name: publish-release
+          requires:
+            - build
+          filters:
+            tags:
+              only: /v.*/
+          production: true
+          bump-version-part: major
