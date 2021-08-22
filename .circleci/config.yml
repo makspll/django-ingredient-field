@@ -46,7 +46,7 @@ jobs:
               . ../venv/bin/activate
               python3 setup.py sdist
               twine check dist/*
-              twine upload -r testpypi dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive
+              twine upload --repository testpypi dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive
   publish-prod:
     docker:
       - image: circleci/python:3.8
