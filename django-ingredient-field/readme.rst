@@ -13,3 +13,8 @@ Quick start
     ]
 
 3. Run ``python manage.py migrate`` to create the models.
+
+
+Documentation 
+-------------
+https://django-ingredient-field.readthedocs.io/en/latest/?
