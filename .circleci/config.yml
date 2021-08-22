@@ -22,8 +22,10 @@ jobs:
               coverage run manage.py test dj_ingredient_field sample_app
               coverage html
               coverage xml
-              mkdir test-results
-              mv coverage.xml test-results/coverage.xml
+              mkdir -p test-results/pytest
+              mv coverage.xml test-results/pytest/coverage.xml
+      - store_artifacts:
+          path: htmlcov
       - store_test_results:
           path: test-results
   publish:
