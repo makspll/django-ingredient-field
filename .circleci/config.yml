@@ -20,10 +20,12 @@ jobs:
           command: |
               . venv/bin/activate
               coverage run manage.py test dj_ingredient_field sample_app
-              coverage report 
               coverage html
-      - store_artifacts:
-          path: htmlcov
+              coverage xml
+              mkdir test-results
+              mv coverage.xml test-results/coverage.xml
+      - store_test_results:
+          path: test-results
   publish:
     docker:
       - image: circleci/python:3.8
