@@ -102,5 +102,7 @@ workflows:
           filters:
             tags:
               only: /v.*/
+            branches:
+              ignore: /.*/
           production: true
           bump-version-part: major
