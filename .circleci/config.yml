@@ -6,24 +6,71 @@ jobs:
       - checkout 
       - run: 
           name: download dependencies
+          working_directory: django-ingredient-field
           command: |
-              python3 -m venv venv
+              python3 -m venv ../venv
+              . ../venv/bin/activate
+              pip install -r ../requirements_dev.txt
+              python3 setup.py sdist
+              python3 setup.py install 
+      - run: 
+          name: run tests
+          command: |
               . venv/bin/activate
+              python3 manage.py test dj_ingredient_field
+
+  publish-test:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout 
+      - run: 
+          name: download dependencies
+          command: |
+              python3 -m venv ../venv
+              . ../venv/bin/activate
               pip install -r requirements_dev.txt
       - run: 
-          name: init .pypirc
+          name: upload to test pypi repository
+          working_directory: django-ingredient-field
           command: |
-              echo -e "[pypi]" >> ~/.pypirc
-              echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
-              echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+              python3 -m venv ../venv
+              . ../venv/bin/activate
+              python3 setup.py sdist
+              twine check dist/*
+              twine upload -r testpypi dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive
+  publish-prod:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout 
+      - run: 
+          name: download dependencies
+          command: |
+              pip install -r requirements_dev.txt
       - run: 
           name: upload to test pypi repository
+          working_directory: django-ingredient-field
           command: |
-              . venv/bin/activate
-              python3 django-ingredient-field/setup.py sdist
-              twine upload --repository testpypi dist/*
+              python3 setup.py sdist
+              twine upload dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive
+
 workflows:
   version: 2
-  build_and_test:
+  build_test_publish:
     jobs:
-     - build
+      - build
+      - publish-test:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - develop
+      - publish-prod:
+          requires:
+            - publish-test
+          filters:
+            branches:
+              only: 
+                - main
