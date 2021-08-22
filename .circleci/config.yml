@@ -1,3 +1,5 @@
+version: 2.1
+
 jobs: 
   build:
     docker: 
@@ -18,10 +20,13 @@ jobs:
           command: |
               . venv/bin/activate
               python3 manage.py test dj_ingredient_field
-
-  publish-test:
+  publish:
     docker:
       - image: circleci/python:3.8
+    parameters:
+      production: 
+        type: boolean
+        default: false
     steps:
       - checkout 
       - run: 
@@ -30,57 +35,49 @@ jobs:
               python3 -m venv ./venv
               . ./venv/bin/activate
               pip install -r requirements_dev.txt
-      - run: 
-          name: bump version
-          command: |
-              . ./venv/bin/activate
+      - unless:
+          condition: << parameters.production >>
+          steps:
+            - run: 
+                name: bump version
+                command: |
+                  . ./venv/bin/activate
 
-              bumpversion minor --message='{current_version} → {new_version} [skip ci]' --allow-dirty
-              git config --global user.email "bumpversionbot@gmail.com"
-              git config --global user.name "bumpversionbot"
-              git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:develop
+                  # set arguments for test repository for next step
+                  echo "export REPO_ARGS='--repository testpypi'" >> $BASH_ENV
+                  
+                  # bump version
+                  bumpversion minor --message='{current_version} → {new_version} [skip ci]' --allow-dirty
+                  git config --global user.email "bumpversionbot@gmail.com"
+                  git config --global user.name "bumpversionbot"
+                  git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:<< pipeline.git.branch >>
       - run: 
-          name: upload to test pypi repository
+          name: upload to pypi repository
           working_directory: django-ingredient-field
           command: |
-              . ../venv/bin/activate
-              python3 setup.py sdist
-              twine check dist/*
-              twine upload --repository testpypi dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive --skip-existing 
-  publish-prod:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - checkout 
-      - run: 
-          name: download dependencies
-          command: |
-              python3 -m venv ./venv
-              . ./venv/bin/activate
-              pip install -r requirements_dev.txt
-      - run: 
-          name: upload to test pypi repository
-          working_directory: django-ingredient-field
-          command: |
-              . ../venv/bin/activate
-              python3 setup.py sdist
-              twine upload dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive
+            . ../venv/bin/activate
+            python3 setup.py sdist
+            twine check dist/*
+            twine upload ${REPO_ARGS} dist/* -p $PYPI_PASSWORD -u $PYPI_USERNAME --non-interactive --skip-existing 
 workflows:
-  version: 2
   build_test_publish:
     jobs:
       - build
-      - publish-test:
+      - publish:
+          name: publish-test
           requires:
             - build
           filters:
             branches:
               only:
                 - develop
-      - publish-prod:
-          requires:
-            - build
-          filters:
-            branches:
-              only: 
-                - main
+          production: false
+      # - publish:
+      #     name: publish-prod
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         only: 
+      #           - main
+      #     production: true
