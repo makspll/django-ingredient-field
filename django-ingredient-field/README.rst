@@ -1,15 +1,20 @@
-Level 1
-=======
+=====
+django-ingredient-field
+=====
 
-===================================================
-This is level 1 too, but looks better in plain text
-===================================================
+Quick start
+-----------
 
-Level 2
--------
+1. Add "dj_ingredient_field" to your INSTALLED_APPS setting like this::
 
-Level 3
-^^^^^^^
+    INSTALLED_APPS = [
+        ...
+        'dj_ingredient_field',
+    ]
 
-Level 4
-"""""""
+3. Run ``python manage.py migrate`` to create the models.
+
+
+Documentation 
+-------------
+https://django-ingredient-field.readthedocs.io/en/latest/?
