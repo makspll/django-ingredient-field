@@ -53,7 +53,7 @@ jobs:
                 echo "export TWINE_ARGS='--repository testpypi'" >> $BASH_ENV
       - unless:
           condition:
-            - equal: [ none, << parameters.bump-version-part >>] 
+            - equal: [ neither, << parameters.bump-version-part >> ] 
           steps:
             run: 
               name: bump version
@@ -105,4 +105,4 @@ workflows:
             branches:
               ignore: /.*/
           production: true
-          bump-version-part: none
+          bump-version-part: neither
