@@ -1,7 +1,7 @@
 from typing import Any, Optional, Union
 from django.db import models
 from django.forms.fields import ChoiceField
-from dj_ingredient_field.enums import IngredientNameChoices
+from dj_ingredient_field.enums import IngredientName
 import math 
 
 class IngredientField(models.CharField):
@@ -15,8 +15,8 @@ class IngredientField(models.CharField):
 
     def __init__(self, *args, **kwargs):
         
-        kwargs['choices'] = IngredientNameChoices.choices
-        kwargs['max_length'] =  math.ceil(math.log10(len(IngredientNameChoices.choices)))
+        kwargs['choices'] = IngredientName.choices
+        kwargs['max_length'] =  math.ceil(math.log10(len(IngredientName.choices)))
 
         super().__init__(*args, **kwargs)
 
