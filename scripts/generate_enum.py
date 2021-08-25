@@ -30,14 +30,14 @@ if __name__ == "__main__":
             'form_rep':str(ing).title(),
         })
 
-    # sort it 
+    # sort it for nice enum.py formatting
     processed.sort(key= lambda x: x['original'])
 
     # output python file
     with open(sys.argv[2],'w+') as out_file:
         out_file.write('from django.utils.translation import gettext_lazy as _\n')
         out_file.write('from django.db import models\n')
-        out_file.write('class IngredientNameChoices(models.TextChoices):\n')
+        out_file.write('class IngredientName(models.TextChoices):\n')
         
         for ingredient in processed:
             out_file.write("\t{capitalized} = '{db_rep}', _('{form_rep}') #{original}\n"
