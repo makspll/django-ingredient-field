@@ -1,10 +1,14 @@
 PACKAGE_DIR="./django-ingredient-field"
-
+MKFILE_PATH=$(shell pwd)
 buildpip:
-	pip uninstall django-ingredient-field;
+	pip uninstall --yes django-ingredient-field;
 	cd $(PACKAGE_DIR) && python setup.py sdist && python setup.py install;
-test: buildpip 
-	coverage run manage.py test dj_ingredient_field sample_app;
+test: 
+	coverage run --branch --include=/**/dj_ingredient_field/*.py --omit=**admin*,**apps*,**tests*,**enums* manage.py test dj_ingredient_field --nocapture;
+migrate:
+	python manage.py makemigrations dj_ingredient_field
 coverage: test
-	coverage report
 	coverage html
+	coverage xml
+coverage-open: coverage 
+	open "$(MKFILE_PATH)/htmlcov/index.html"

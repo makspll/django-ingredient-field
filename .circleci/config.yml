@@ -13,19 +13,16 @@ jobs:
               python3 -m venv ../venv
               . ../venv/bin/activate
               pip install -r ../requirements_dev.txt
-              python3 setup.py sdist
-              python3 setup.py install 
       - run: 
           name: run tests
           command: |
               . venv/bin/activate
-              coverage run manage.py test dj_ingredient_field sample_app
-              coverage html
-              coverage xml
-              mkdir -p test-results/pytest
-              mv coverage.xml test-results/pytest/coverage.xml
+              make coverage
+              mkdir -p test-results
+              mv coverage.xml test-results/coverage.xml
+              mv htmlcov test-results
       - store_artifacts:
-          path: htmlcov
+          path: test-results
       - store_test_results:
           path: test-results
   publish:
@@ -54,23 +51,18 @@ jobs:
               command: |
                 # set arguments for test repository for next step
                 echo "export TWINE_ARGS='--repository testpypi'" >> $BASH_ENV
-      - when:
+      - unless:
           condition:
-            equal: ["major", << parameters.bump-version-part >>]
+            - equal: [ none, << parameters.bump-version-part >>] 
           steps:
-            run:
-              name: set BUMP2VERSION_ARGS
+            run: 
+              name: bump version
               command: |
-                echo "export BUMP2VERSION_ARGS='--tag'" >> $BASH_ENV
-      - run: 
-          name: bump version
-          command: |
-            . ./venv/bin/activate
-            bumpversion << parameters.bump-version-part >> --message='{current_version} → {new_version} [skip ci]' --allow-dirty ${BUMP2VERSION_ARGS}
-            git config --global user.email "bumpversionbot@gmail.com"
-            git config --global user.name "bumpversionbot"
-            git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:<< pipeline.git.branch >>
-            git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:<< pipeline.git.branch >> --tags
+                . ./venv/bin/activate
+                bumpversion << parameters.bump-version-part >> --message='{current_version} → {new_version} [skip ci]' --allow-dirty
+                git config --global user.email "bumpversionbot@gmail.com"
+                git config --global user.name "bumpversionbot"
+                git push -q https://${GITHUB_TOKEN}@github.com/makspll/django-ingredient-field.git HEAD:<< pipeline.git.branch >>
       - run: 
           name: upload to pypi repository
           working_directory: django-ingredient-field
@@ -113,4 +105,4 @@ workflows:
             branches:
               ignore: /.*/
           production: true
-          bump-version-part: major
+          bump-version-part: none
