@@ -84,7 +84,7 @@ workflows:
               only:
                 - develop
           production: false
-          bump-version-part: patch
+          bump-version-part: neither
       - publish:
           name: publish-minor
           requires:
