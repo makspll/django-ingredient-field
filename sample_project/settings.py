@@ -11,9 +11,15 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import sys
+import os 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+APP_PATH = os.path.join(BASE_DIR, 'django-ingredient-field')
+sys.path.insert(0, APP_PATH)
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,7 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'dj_ingredient_field',
-    'sample_app'
+    'dj_ingredient_field.tests',
+    'django_nose',
 ]
 
 MIDDLEWARE = [
@@ -125,3 +132,5 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
