@@ -6,7 +6,6 @@ from .enums import IngredientName
 class Ingredient():
     def __init__(self, name : IngredientName ) -> None:
         self.name = str(name)
-        print(self)
 
     def __str__(self):
         return str(self.name)
