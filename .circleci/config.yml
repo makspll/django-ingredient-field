@@ -74,7 +74,7 @@ jobs:
 workflows:
   build_test_publish:
     jobs:
-      - build
+      - build:
           filters:
             tags:
               only: /^v.*/
