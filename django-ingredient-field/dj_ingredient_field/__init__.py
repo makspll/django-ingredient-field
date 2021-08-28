@@ -1,15 +1,12 @@
 __version__ = "1.0.0"
 
-from typing import Union, Any
-from django.core.exceptions import ValidationError
-from django.db import models
 from .enums import UnitType, IngredientName
-from .exceptions import InvalidConversionException, ParseError
+from .exceptions import InvalidConversionException
+from .settings import INGREDIENT_UNITS, VOLUME_BASE_UNIT, MASS_BASE_UNIT, EMPTY_UNIT, INGREDIENT_NAMES
+from django.db import models
 from numbers import Number 
-import copy 
+from typing import Any
 import math 
-import parse
-from .settings import INGREDIENT_UNITS, VOLUME_BASE_UNIT, MASS_BASE_UNIT, EMPTY_UNIT
 
 
 class Ingredient():
@@ -108,7 +105,7 @@ class IngredientField(models.CharField):
 
     def __init__(self, *args, **kwargs):
         
-        kwargs['choices'] = IngredientName.choices
+        kwargs['choices'] = INGREDIENT_NAMES
         kwargs['max_length'] = 50 # a bit of leeway (current max chars is 39)
 
         super().__init__(*args, **kwargs)

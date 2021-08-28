@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.utils.module_loading import import_string
-from .enums import UnitType
+from .enums import IngredientName, UnitType
 
 def import_or_default(name : str, default):
     try:
@@ -92,3 +92,8 @@ EMPTY_UNIT = {
         'unit_type': UnitType.VOLUME,
         'conversion_rate': -1,
 }
+
+
+ingredient_names = IngredientName.choices
+
+INGREDIENT_NAMES = import_or_default("INGREDIENT_NAMES", ingredient_names)
