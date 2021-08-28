@@ -1,17 +1,28 @@
 __version__ = "1.0.0"
 
-from typing import Union
-from .fields import IngredientField
+from typing import Union, Any
+from django.core.exceptions import ValidationError
+from django.db import models
 from .enums import UnitType, IngredientName
+from .exceptions import InvalidConversionException, ParseError
 from numbers import Number 
 import copy 
+import math 
+import parse
+from .settings import INGREDIENT_UNITS, VOLUME_BASE_UNIT, MASS_BASE_UNIT, EMPTY_UNIT
+
 
 class Ingredient():
+    format_string="{name}"
+
     def __init__(self, name) -> None:
         self.name = str(name)
 
     def __str__(self):
         return str(self.name)
+        
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def __eq__(self, o: object) -> bool:
         return isinstance(o, Ingredient) and o.name == self.name
@@ -20,8 +31,10 @@ class MeasurementUnit():
     """
         A class containing logic for cooking measurement units which have a 'base' unit.
     """
-    
-    def __init__(self, name : str, symbol : str, base_unit : 'MeasurementUnit', conversion_rate : Number, format_string="{symbol}", unit_type = None) -> None:
+    base_volume_unit=None
+    base_mass_unit=None
+
+    def __init__(self, name : str, symbol : str, conversion_rate : Number, unit_type : UnitType, is_base_unit=False) -> None:
         """ 
         Creates a new MeasurementUnit instance
 
@@ -29,29 +42,39 @@ class MeasurementUnit():
         :param str symbol: The shorthand for the name of the unit, e.g.: ml, L, g
         :param base_unit: The 'base_unit', if None, then this is unit itself is a base for other units
         :type base_unit: MeasurementUnit or None
+        :param bool is_base_unit: Whether this unit is a base_unit
         :param Number conversion_rate: The conversion rate from the base unit (i.e. fraction of the base unit)
-        :param format_string: The way to display this unit's value, can reference: name and symbol fields, defaults to "{symbol}"
-        :type format_string: str, optional
         """
-        if not base_unit and not unit_type:
-            raise Exception("You must specify a unit_type for base units")
-        
         self.name = str(name)
         self.conversion_rate = conversion_rate
         self.symbol = symbol
-        self.format_string = format_string
-        self.base_unit = base_unit
-        self.unit_type = base_unit.unit_type if base_unit else unit_type
+        self.unit_type = unit_type
 
+        if not self.unit_type:
+            raise ValueError("unit_type must be provided")
+            
+        self.base_unit = None
+        if self.unit_type == UnitType.VOLUME and not is_base_unit:
+            self.base_unit = MeasurementUnit.base_volume_unit if MeasurementUnit.base_volume_unit else MeasurementUnit(**VOLUME_BASE_UNIT)
+            MeasurementUnit.base_volume_unit = self.base_unit
+        if self.unit_type == UnitType.MASS and not is_base_unit:
+            self.base_unit = MeasurementUnit.base_mass_unit if MeasurementUnit.base_mass_unit  else MeasurementUnit(**MASS_BASE_UNIT)
+            MeasurementUnit.base_mass_unit = self.base_unit
 
     def __str__(self):
-        return self.format_string.format(name = self.name, symbol = self.symbol)
+        return str(self.name)
+    
+    def __repr__(self) -> str:
+        return self.__str__()
+
+    def __eq__(self, o: object) -> bool:
+        return isinstance(o, MeasurementUnit) and self.name == o.name and math.isclose(self.conversion_rate,o.conversion_rate) and self.symbol == o.symbol and self.base_unit == o.base_unit and self.unit_type == o.unit_type
 
     def get_base_unit_amount(self, amount) -> Number:
         """ 
         Returns the equivalent base unit
         """
-        return amount * (1.0/self.conversion_rate)
+        return amount * self.conversion_rate
 
     def convert_to(self, amount, o : 'MeasurementUnit', density=1.0) -> Number:
 
@@ -62,33 +85,131 @@ class MeasurementUnit():
                 cross_conversion_rate = 1.0 / density
             elif o.unit_type == UnitType.MASS:
                 cross_conversion_rate = density
+            else:
+                raise ValueError("The unit_type {} cannot be a target of unit conversion".format(o.unit_type))
+        elif o.base_unit != self.base_unit or not self.base_unit or not o.base_unit:
+            # If the unit type is the same but the base unit is different
+            raise InvalidConversionException(self,o,"different base_units: {this_base} != {other_base}".format(
+                this_base=o.base_unit,
+                other_base=o.base_unit)) 
+            
+        # the ratio of this conversion rate to the other gives 
+        # the new conversion rate relative to base unit
+        return cross_conversion_rate * (self.conversion_rate / o.conversion_rate) * amount
+
+class IngredientField(models.CharField):
+    """
+    An ingredient field for Django models 
+    which provides over 3500 cooking ingredients
+
+    Dataset from https://dominikschmidt.xyz/simplified-recipes-1M/
+    """
+    description = "A cooking ingredient"
+
+    def __init__(self, *args, **kwargs):
         
-        # convert to base units to get mass in kg and volume in m^3
-        amount_base = self.get_base_unit_amount()
+        kwargs['choices'] = IngredientName.choices
+        kwargs['max_length'] = 50 # a bit of leeway (current max chars is 39)
 
-        return cross_conversion_rate * amount_base
-    
+        super().__init__(*args, **kwargs)
 
-class VolumeUnit(MeasurementUnit):
+    def clean(self, value, model_instance):
+        """
+            Validates the string representation, since validate checks against the choice list,
+            and generates clean python object
+        """
+        str_value = str(value) 
+        self.validate(str_value, model_instance)
+        self.run_validators(str_value)
+        value = self.to_python(value)
+        return value
+
+    def deconstruct(self):
+        """
+        Removes choices and max_length keywords as these 
+        are not to be user editable
+        """
+        name, path, args, kwargs = super().deconstruct()
+        del kwargs['choices']
+        del kwargs['max_length']
+
+        return name, path, args, kwargs 
+
+    def from_db_value(self, value, expression, connection):
+        if value is None:
+            return value
+        else:
+            return Ingredient(value)
+            
+    def to_python(self, value: Any) -> Any:
+        if isinstance(value, Ingredient):
+            return value
+        elif value is None:
+            return value
+        else:
+            return Ingredient(value)
+
+    def get_prep_value(self, value : Ingredient):
+        return str(value)
+
+
+class MeasurementUnitField(models.CharField):
     """
-        A measurement unit for volumes, the base unit is the metric Litre
+    A field for picking measurement options for an ingredient
     """
-    base_unit = None
-    
-    def __init__(self, name: str, symbol: str, conversion_rate: Number, format_string="{amount} {symbol}") -> None:
-        if not VolumeUnit.base_unit:
-            base_unit = MeasurementUnit("Cubic Meter", 'm^3', None, 1, unit_type=UnitType.VOLUME)
+    description = "A cooking measurement unit"
+    units = [(key,key) for key in INGREDIENT_UNITS.keys()]
 
-        super().__init__(name, symbol, base_unit, conversion_rate, format_string=format_string)
+    def __init__(self, *args, **kwargs):
 
-class MassUnit(MeasurementUnit): 
-    """
-        A measurement unit for masses, the base unit is the metric Gram
-    """
-    base_unit = None
+        kwargs['choices'] = MeasurementUnitField.units
+        kwargs['max_length'] = max([len(x) for x,y in MeasurementUnitField.units])
 
-    def __init__(self, name: str, symbol: str, conversion_rate: Number, format_string="{amount} {symbol}") -> None:
-            if not VolumeUnit.base_unit:
-                base_unit = MeasurementUnit("Killogram", 'kg', None, 1, unit_type=UnitType.MASS)
+        super().__init__(*args, **kwargs)
 
-            super().__init__(name, symbol, base_unit, conversion_rate, format_string=format_string)
+    def clean(self, value, model_instance):
+        """
+            Validates the string representation, since validate checks against the choice list,
+            and generates clean python object
+        """
+        str_value = str(value)
+        value = self.to_python(value)
+        self.validate(str_value, model_instance)
+        self.run_validators(str_value)
+
+        return value
+
+    def deconstruct(self):
+        """
+        Removes choices and max_length keywords as these 
+        are not to be user editable
+        """
+        name, path, args, kwargs = super().deconstruct()
+        del kwargs['choices']
+        del kwargs['max_length']
+
+        return name, path, args, kwargs 
+
+    def get_setting_for_unit_name_or_default(self, value):
+        valid_unit = INGREDIENT_UNITS.get(value, None)
+        if not valid_unit:
+            valid_unit = EMPTY_UNIT.copy()
+            valid_unit['name'] = value
+        return valid_unit
+
+    def from_db_value(self, value, expression, connection):
+        if value is None:
+            return value
+        else:
+            return MeasurementUnit(**self.get_setting_for_unit_name_or_default(value))
+            
+    def to_python(self, value: Any) -> Any:
+        if isinstance(value, MeasurementUnit):
+            return value
+        elif value is None:
+            return value
+        else:
+            return MeasurementUnit(**self.get_setting_for_unit_name_or_default(value))
+
+    def get_prep_value(self, value : MeasurementUnit):
+        return str(value)
