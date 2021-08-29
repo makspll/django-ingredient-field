@@ -1,5 +1,11 @@
+import enum
 from django.utils.translation import gettext_lazy as _
 from django.db import models
+
+class UnitType(enum.Enum):
+	VOLUME="Volume"
+	MASS="Mass"
+
 class IngredientName(models.TextChoices):
 	I_ABSINTHE = 'ABSINTHE', _('Absinthe') #absinthe
 	I_ACCENT = 'ACCENT', _('Accent') #accent

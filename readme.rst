@@ -2,6 +2,16 @@
 django-ingredient-field
 =======================
 
+.. image:: https://circleci.com/gh/makspll/django-ingredient-field/tree/main.svg?style=svg
+        :target: https://circleci.com/gh/makspll/django-ingredient-field/tree/main
+
+.. image:: https://circleci.com/gh/makspll/django-ingredient-field/tree/develop.svg?style=svg
+        :target: https://circleci.com/gh/makspll/django-ingredient-field/tree/develop
+
+.. image:: https://readthedocs.org/projects/django-ingredient-field/badge/?version=latest
+        :target: https://django-ingredient-field.readthedocs.io/en/latest/?badge=latest
+        :alt: Documentation Status
+
 Quick start
 -----------
 
