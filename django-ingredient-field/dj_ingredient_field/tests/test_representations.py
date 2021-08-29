@@ -35,6 +35,9 @@ class MeasurementUnitTests(TestCaseWithUtils):
     
     def test_convert_kg_to_m3_water(self):
         self.assertConvertsTo(MeasurementUnit("test","t", 1, UnitType.MASS), 1, MeasurementUnit("test2","t2", 1, UnitType.VOLUME), 1e-3, density=997, places=3)
+    
+    def test_convert_kg_to_l_water(self):
+        self.assertConvertsTo(MeasurementUnit("test","t", 1, UnitType.MASS), 1, MeasurementUnit("test2","t2", 1e-3, UnitType.VOLUME), 1, density=997, places=2)
 
     def test_convert_m3_to_kg_water(self):
         self.assertConvertsTo(MeasurementUnit("test","t", 1, UnitType.VOLUME), 1, MeasurementUnit("test2","t2", 1, UnitType.MASS), 997, density=997, places=3)
