@@ -6,28 +6,13 @@
 Welcome to django-ingredient-field's documentation!
 ===================================================
 
-Usage
-=====
-
-Simply add the field to your model::
-
-   from dj_ingredient_field import IngredientField
-
-   class MyModel(models.Model):
-      ingredient = IngredientField()
-
-The value of the field is an Ingredient object::
-
-   from dj_ingredient_field import IngredientName, Ingredient
-
-   model.ingredient = Ingredient(IngredientName.I_ARUGULA)
-
-All the available ingredients can be found in the ``IngredientName`` enum
-
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
+   dj_ingredient_field
+
+
+.. include:: ../README.rst
 
 
 Indices and tables

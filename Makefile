@@ -12,3 +12,7 @@ coverage: test
 	coverage xml
 coverage-open: coverage 
 	open "$(MKFILE_PATH)/htmlcov/index.html"
+docs:
+	cd ${PACKAGE_DIR}/docs && make html
+docs-open: docs
+	open ${PACKAGE_DIR}/docs/_build/html/index.html
