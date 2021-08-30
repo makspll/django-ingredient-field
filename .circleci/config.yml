@@ -89,16 +89,6 @@ workflows:
           production: false
           bump-version-part: neither
       - publish:
-          name: publish-minor
-          requires:
-            - build
-          filters:
-            branches:
-              only: 
-                - main
-          production: true
-          bump-version-part: minor
-      - publish:
           name: publish-release
           requires:
             - build
