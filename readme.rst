@@ -22,7 +22,14 @@ Quick start
         'dj_ingredient_field',
     ]
 
-3. Run ``python manage.py migrate`` to create the models.
+2. To use lazy loaded widgets include this module in your urlpatterns::
+
+    urlpatterns = [
+        path('cooking/', include('dj_ingredient_field.urls')),
+        ...
+    ]
+
+3. That's it!
 
 Usage
 -----

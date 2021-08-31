@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'dj_ingredient_field',
     'dj_ingredient_field.tests',
     'django_nose',
+    'sample_app'
 ]
 
 MIDDLEWARE = [
