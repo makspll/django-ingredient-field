@@ -58,7 +58,8 @@ class MeasurementUnit():
             self.base_unit = MeasurementUnit.base_mass_unit if MeasurementUnit.base_mass_unit  else MeasurementUnit(**MASS_BASE_UNIT)
             MeasurementUnit.base_mass_unit = self.base_unit
         elif self.unit_type == UnitType.QUANTITY:
-            self.base_unit = self
+            # quantity does not have a base unit
+            pass
 
     def __str__(self):
         return str(self.name)
@@ -67,7 +68,7 @@ class MeasurementUnit():
         return self.__str__()
 
     def __eq__(self, o: object) -> bool:
-        return isinstance(o, MeasurementUnit) and self.name == o.name and math.isclose(self.conversion_rate,o.conversion_rate) and self.symbol == o.symbol and self.base_unit == o.base_unit and self.unit_type == o.unit_type
+        return isinstance(o, MeasurementUnit) and self.name == o.name and self.symbol == o.symbol and self.base_unit == o.base_unit and self.unit_type == o.unit_type and (self.unit_type == UnitType.QUANTITY or math.isclose(self.conversion_rate,o.conversion_rate))
 
     def get_base_unit_amount(self, amount) -> Number:
         """ 
