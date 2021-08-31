@@ -1,4 +1,4 @@
-__version__ = "1.3.1"
+__version__ = "1.4.0"
 
 from .enums import UnitType, IngredientName
 from .exceptions import InvalidConversionException
@@ -54,9 +54,11 @@ class MeasurementUnit():
         if self.unit_type == UnitType.VOLUME and not is_base_unit:
             self.base_unit = MeasurementUnit.base_volume_unit if MeasurementUnit.base_volume_unit else MeasurementUnit(**VOLUME_BASE_UNIT)
             MeasurementUnit.base_volume_unit = self.base_unit
-        if self.unit_type == UnitType.MASS and not is_base_unit:
+        elif self.unit_type == UnitType.MASS and not is_base_unit:
             self.base_unit = MeasurementUnit.base_mass_unit if MeasurementUnit.base_mass_unit  else MeasurementUnit(**MASS_BASE_UNIT)
             MeasurementUnit.base_mass_unit = self.base_unit
+        elif self.unit_type == UnitType.QUANTITY:
+            self.base_unit = self
 
     def __str__(self):
         return str(self.name)
@@ -83,7 +85,10 @@ class MeasurementUnit():
             elif o.unit_type == UnitType.MASS:
                 cross_conversion_rate = density
             else:
-                raise ValueError("The unit_type {} cannot be a target of unit conversion".format(o.unit_type))
+                raise InvalidConversionException(self,o,"The unit_type {} cannot be a target of unit conversion".format(o.unit_type))
+        elif self.unit_type == UnitType.QUANTITY:
+            # no conversion happening, quantity is just quantity
+            return amount
         elif o.base_unit != self.base_unit or not self.base_unit or not o.base_unit:
             # If the unit type is the same but the base unit is different
             raise InvalidConversionException(self,o,"different base_units: {this_base} != {other_base}".format(
