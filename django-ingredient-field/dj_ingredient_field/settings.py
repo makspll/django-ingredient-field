@@ -64,6 +64,12 @@ units = [
         'unit_type': UnitType.MASS,
         'conversion_rate': 1e-6
     },
+    {
+        'name': 'Unit',
+        'symbol': 'unit',
+        'unit_type': UnitType.QUANTITY,
+        'conversion_rate': None
+    },
 ]
 
 

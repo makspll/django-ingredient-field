@@ -5,6 +5,7 @@ from django.db import models
 class UnitType(enum.Enum):
 	VOLUME="Volume"
 	MASS="Mass"
+	QUANTITY="Quantity"
 
 class IngredientName(models.TextChoices):
 	I_ABSINTHE = 'ABSINTHE', _('Absinthe') #absinthe

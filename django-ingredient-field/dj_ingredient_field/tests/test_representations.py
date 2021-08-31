@@ -27,11 +27,17 @@ class IngredientTests(TestCase):
 
 class MeasurementUnitTests(TestCaseWithUtils):
     
+    def test_invalid_conversion_invalid_type(self):
+        self.assertConversionRaisesException(MeasurementUnit("testA","t",1,UnitType.MASS,True),1,MeasurementUnit("testB","t",1,UnitType.QUANTITY,True),InvalidConversionException)
+    
     def test_invalid_conversion_different_base(self):
         self.assertConversionRaisesException(MeasurementUnit("testA","t",1,UnitType.MASS,True),1,MeasurementUnit("testB","t",1,UnitType.MASS,True),InvalidConversionException)
     
     def test_invalid_conversion_invalid_target_unit(self):
-        self.assertConversionRaisesException(MeasurementUnit("testA","t",1,UnitType.MASS,True),1,MeasurementUnit("testB","t",1," ",True),ValueError)
+        self.assertConversionRaisesException(MeasurementUnit("testA","t",1,UnitType.MASS),1,MeasurementUnit("testB","t",1," "),InvalidConversionException)
+    
+    def test_convert_1_unit_to_1_unit(self):
+        self.assertConvertsTo(MeasurementUnit("test","t", None, UnitType.QUANTITY), 1, MeasurementUnit("test2","t2", None, UnitType.QUANTITY), 1, places=3)
     
     def test_convert_kg_to_m3_water(self):
         self.assertConvertsTo(MeasurementUnit("test","t", 1, UnitType.MASS), 1, MeasurementUnit("test2","t2", 1, UnitType.VOLUME), 1e-3, density=997, places=3)
