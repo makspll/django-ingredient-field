@@ -6,6 +6,8 @@ dj\_ingredient\_field
 
    examples
    settings
+   urls
+   widgets
 
 Module contents
 ---------------
