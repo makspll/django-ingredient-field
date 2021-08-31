@@ -36,6 +36,19 @@ class MeasurementUnitTests(TestCaseWithUtils):
     def test_invalid_conversion_invalid_target_unit(self):
         self.assertConversionRaisesException(MeasurementUnit("testA","t",1,UnitType.MASS),1,MeasurementUnit("testB","t",1," "),InvalidConversionException)
     
+    def test_equal_quantity_unit(self):
+        self.assertEqual(MeasurementUnit("testA","t",1,UnitType.QUANTITY),MeasurementUnit("testA","t",1,UnitType.QUANTITY))
+    
+    def test_equal_mass_unit(self):
+        self.assertEqual(MeasurementUnit("testA","t",1,UnitType.MASS),MeasurementUnit("testA","t",1,UnitType.MASS))
+    
+    def test_invalid_equal_volume_unit(self):
+        self.assertEqual(MeasurementUnit("testA","t",1,UnitType.VOLUME),MeasurementUnit("testA","t",1,UnitType.VOLUME))
+    
+    def test_unequal_volume_quantity_unit(self):
+        self.assertNotEqual(MeasurementUnit("testA","t",1,UnitType.VOLUME),MeasurementUnit("testA","t",1,UnitType.QUANTITY))
+    
+
     def test_convert_1_unit_to_1_unit(self):
         self.assertConvertsTo(MeasurementUnit("test","t", None, UnitType.QUANTITY), 1, MeasurementUnit("test2","t2", None, UnitType.QUANTITY), 1, places=3)
     
