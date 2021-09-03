@@ -1,27 +1,52 @@
 from django import test
-from dj_ingredient_field import Ingredient, MeasurementUnit, UnitType, InvalidConversionException
+from dj_ingredient_field import Ingredient,IngredientName, MeasurementUnit, UnitType, InvalidConversionException
 from django.test import TestCase
 from .utils import TestCaseWithUtils
 
-# Create your tests here.
+class IngredientChoicesTests(TestCase):
+
+    def test_str_is_value(self):
+        for e in IngredientName:
+            self.assertEqual(e.value,str(e))
+
+    def test_props_no_exceptions(self):
+        for e in IngredientName:
+            e.props
+
+    
+    
+
 class IngredientTests(TestCase):
 
+    def test_valid_ingredient_with_props_has_props(self):
+        ing = Ingredient(IngredientName.I_ABSINTHE)
+
+        self.assertIsNotNone(ing.props)
+        self.assertIn("avg_density",ing.props)
+        self.assertIn("type",ing.props)
+
+    def test_invalid_ingredient_has_empty_props(self):
+        ing = Ingredient("")
+
+        self.assertIsNotNone(ing.props)
+        self.assertDictEqual(ing.props,{})
+
     def test_same_name_equals(self):
-        ing = Ingredient("a")
-        ing2 = Ingredient("a")
+        ing = Ingredient(IngredientName.I_ABSINTHE)
+        ing2 = Ingredient(IngredientName.I_ABSINTHE)
 
         self.assertEqual(ing,ing2, "Ingredients with the same name are not equal")
 
     def test_differnet_name_not_equals(self):
-        ing = Ingredient("a")
-        ing2 = Ingredient("b")
+        ing = Ingredient(IngredientName.I_ABSINTHE)
+        ing2 = Ingredient(IngredientName.I_ACCENT)
 
         self.assertNotEqual(ing,ing2, "Ingredients with different name are equal")
     
     def test_str(self):
         self.assertEqual(
-            "a",
-            str(Ingredient("a")),
+            IngredientName.I_ABSINTHE,
+            str(Ingredient(IngredientName.I_ABSINTHE)),
             "Ingredient did not convert to string properly"
         )
 

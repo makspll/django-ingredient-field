@@ -10,10 +10,23 @@ import math
 
 
 class Ingredient():
-    format_string="{name}"
 
     def __init__(self, name) -> None:
         self.name = str(name)
+
+        # for backward compatibility with 1.4.2 but also 
+        # because since we need to always be able to translate a db value to 
+        # a python value, we allow non-valid ingredient names, and only do these checks
+        # in clean() on fields
+        try: 
+            self.ingredient = IngredientName(name)
+        except Exception as E:
+            self.ingredient = None
+            print(E)
+
+    @property
+    def props(self):
+        return self.ingredient.props if self.ingredient else {}
 
     def __str__(self):
         return str(self.name)
