@@ -130,3 +130,9 @@ dmypy.json
 
 # sphinx
 **/docs/_build/
+
+# vscode
+.vscode/settings.json
+
+# libre office
+.~lock.props.csv#
