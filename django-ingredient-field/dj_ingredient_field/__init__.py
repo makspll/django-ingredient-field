@@ -1,4 +1,4 @@
-__version__ = "1.4.1"
+__version__ = "1.4.2"
 
 from .enums import UnitType, IngredientName
 from .exceptions import InvalidConversionException
